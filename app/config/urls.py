@@ -1,5 +1,6 @@
 from django.urls import path, include
 from django.http import JsonResponse
+from django.contrib import admin
 
 
 def health(request):
@@ -9,6 +10,14 @@ def health(request):
 urlpatterns = [
     path("", health),
     path("", include("paa.urls_search")),
-    path("adminpanel/", include("paa.urls_adminpanel")),
+    path("paa/adminpanel/", include("paa.urls_adminpanel")),
     path("", include("paa.urls_ui")),
+    path("admin/", admin.site.urls),
 ]
+
+try:  # pragma: no cover - optional MFA routes
+    import django_otp.urls as otp_urls
+
+    urlpatterns += [path("otp/", include(otp_urls))]
+except ModuleNotFoundError:  # pragma: no cover
+    pass
