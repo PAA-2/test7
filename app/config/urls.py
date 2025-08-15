@@ -13,6 +13,7 @@ urlpatterns = [
     path("", include("paa.urls_search")),
     path("paa/adminpanel/", include("paa.urls_adminpanel")),
     path("", include("paa.urls_ui")),
+    path("assistant/", include("assistantlite.urls")),
     path("admin/", admin.site.urls),
 ]
 

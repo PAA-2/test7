@@ -1,5 +1,5 @@
 [run]
-source = paa,config
+source = paa,config,assistantlite
 branch = True
 parallel = True
 [report]

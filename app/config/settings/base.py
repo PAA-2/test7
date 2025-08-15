@@ -19,6 +19,7 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "paa",
+    "assistantlite",
 ]
 
 INSTALLED_APPS += [
