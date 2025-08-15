@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Dashboard — Rôle : {{ role }}</h1>
+<ul>
+  <li>Total actions : {{ kpis.total }}</li>
+  <li>En cours : {{ kpis.en_cours }}</li>
+  <li>En traitement : {{ kpis.en_traitement }}</li>
+  <li>Retards : {{ kpis.retards }}</li>
+  <li>Clôturées (7j) : {{ kpis.cloturees_7j }}</li>
+</ul>
+{% endblock %}

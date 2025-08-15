@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>FAQ Assistant</h1>
+<form method="get">
+  <input type="text" name="q" value="{{ q }}" placeholder="Rechercher...">
+  <button>Filtrer</button>
+</form>
+<ul>
+  {% for f in items %}
+    <li><strong>{{ f.question }}</strong><br><pre style="white-space:pre-wrap">{{ f.answer_md }}</pre></li>
+  {% empty %}
+    <li>Aucune entrée.</li>
+  {% endfor %}
+</ul>
+{% endblock %}

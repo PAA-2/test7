@@ -1,0 +1,12 @@
+[run]
+source = paa,config,assistantlite
+branch = True
+parallel = True
+[report]
+show_missing = True
+skip_covered = True
+omit =
+    */migrations/*
+    */tests/*
+[html]
+directory = coverage_html

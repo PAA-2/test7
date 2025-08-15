@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Recherche</h1>
+<form method="get">
+  <input type="text" name="q" value="{{ q }}" placeholder="Rechercher dans actions et pièces jointes..." />
+  <button type="submit">Chercher</button>
+</form>
+{% if q %}
+  <h2>Résultats pour “{{ q }}”</h2>
+  <ul>
+    {% for a in results %}
+      <li>
+        <strong>{{ a.code }}</strong> — {{ a.title }}
+        <div style="font-size:12px;color:#666;">Statut: {{ a.status }} | Échéance: {{ a.due_date }}</div>
+      </li>
+    {% empty %}
+      <li>Aucun résultat.</li>
+    {% endfor %}
+  </ul>
+{% endif %}
+{% endblock %}

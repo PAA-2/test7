@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Journal Assistant (lecture seule)</h1>
+<table>
+  <tr><th>Date</th><th>User</th><th>Intent</th><th>Payload</th><th>Résultat</th></tr>
+  {% for it in items %}
+  <tr>
+    <td>{{ it.ts }}</td>
+    <td>{{ it.user }}</td>
+    <td>{{ it.intent }}</td>
+    <td><code>{{ it.payload }}</code></td>
+    <td><code>{{ it.result }}</code></td>
+  </tr>
+  {% endfor %}
+</table>
+{% endblock %}

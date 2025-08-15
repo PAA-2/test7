@@ -1,0 +1,94 @@
+name: CI
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        kind: [unit, e2e]
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_DB: paa_test
+          POSTGRES_USER: paa
+          POSTGRES_PASSWORD: paa
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd="pg_isready -U paa -d paa_test"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+      redis:
+        image: redis:7
+        ports: ["6379:6379"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Cache pip
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      - name: Install deps
+        run: |
+          pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Install Playwright (browsers)
+        if: matrix.kind == 'e2e'
+        run: |
+          python -m playwright install --with-deps chromium
+
+      - name: Django setup
+        env:
+          POSTGRES_DB: paa_test
+          POSTGRES_USER: paa
+          POSTGRES_PASSWORD: paa
+          POSTGRES_HOST: localhost
+          POSTGRES_PORT: 5432
+          REDIS_CACHE_URL: redis://localhost:6379/2
+          SECRET_KEY: test-secret
+        run: |
+          python - <<'PY'
+          import os, pathlib
+          base = pathlib.Path("app")
+          (base/"media").mkdir(parents=True, exist_ok=True)
+          (base/"staticfiles").mkdir(parents=True, exist_ok=True)
+          PY
+          python -m django --version
+          python app/manage.py migrate --settings=config.settings.test
+          python app/manage.py seed_test_users --settings=config.settings.test
+
+      - name: Run tests (unit/integration) with coverage
+        if: matrix.kind == 'unit'
+        env:
+          DJANGO_SETTINGS_MODULE: config.settings.test
+        run: |
+          pytest -n auto --cov=app --cov-report=xml --cov-report=html:app/coverage_html
+
+      - name: Run E2E (Playwright)
+        if: matrix.kind == 'e2e'
+        env:
+          DJANGO_SETTINGS_MODULE: config.settings.test
+        run: |
+          pytest -m e2e -n 1 --maxfail=1
+
+      - name: Upload coverage HTML
+        if: matrix.kind == 'unit'
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage_html
+          path: app/coverage_html

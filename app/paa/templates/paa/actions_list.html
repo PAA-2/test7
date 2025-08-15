@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Liste Actions</h1>
+<form method="get">
+  <input type="text" name="q" placeholder="Rechercher..." value="{{ request.GET.q }}">
+  <button type="submit">Filtrer</button>
+</form>
+<table>
+<tr><th>Code</th><th>Titre</th><th>Statut</th></tr>
+{% for action in actions %}
+<tr>
+<td>{{ action.code }}</td>
+<td><a href="{% url 'action_detail' action.id %}">{{ action.title }}</a></td>
+<td>{{ action.status }}</td>
+</tr>
+{% endfor %}
+</table>
+<a href="{% url 'export_actions_csv' %}">Exporter CSV</a>
+{% endblock %}

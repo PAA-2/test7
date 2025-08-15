@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>PAA</title>
+</head>
+<body>
+  {% block content %}{% endblock %}
+  <!-- Palette Assistant -->
+  <div id="assistant-palette" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.35);">
+    <div style="max-width:640px;margin:10% auto;background:#fff;border-radius:12px;padding:16px;box-shadow:0 10px 30px rgba(0,0,0,.2)">
+      <h3 style="margin-top:0">Assistant — commandes</h3>
+      <input id="assistant-input" type="text" placeholder='ex: "nouvelle action: Remettre sécurité presse", "check A123ABC", "delai A123ABC +7j", "sync P001", "export actions"' style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;"/>
+      <div id="assistant-result" style="margin-top:10px;font-size:14px;color:#555"></div>
+    </div>
+  </div>
+  <script>
+  (function(){
+    const palette = document.getElementById('assistant-palette');
+    const input = document.getElementById('assistant-input');
+    const result = document.getElementById('assistant-result');
+    function show(){ palette.style.display='block'; input.focus(); input.select(); }
+    function hide(){ palette.style.display='none'; result.textContent=''; input.value=''; }
+    document.addEventListener('keydown', (e)=>{
+      if ((e.ctrlKey||e.metaKey) && e.key.toLowerCase()==='k'){ e.preventDefault(); show(); }
+      if (e.key==='Escape' && palette.style.display==='block'){ hide(); }
+    });
+    palette.addEventListener('click', (e)=>{ if(e.target===palette) hide(); });
+    input && input.addEventListener('keydown', async (e)=>{
+      if(e.key==='Enter'){
+        const q = input.value.trim();
+        if(!q) return;
+        try{
+          const resp = await fetch('/assistant/trigger/', {method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded','X-CSRFToken': (document.querySelector('[name=csrfmiddlewaretoken]')||{}).value || ''}, body: 'q='+encodeURIComponent(q)});
+          const data = await resp.json();
+          if(data.redirect){ window.location = data.redirect; return; }
+          result.textContent = (data.ok===false? '❌ ' : '✅ ') + (data.msg || JSON.stringify(data));
+        }catch(err){ result.textContent='Erreur réseau.' }
+      }
+    });
+  })();
+  </script>
+</body>
+</html>
