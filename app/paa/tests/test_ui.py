@@ -5,6 +5,7 @@ from datetime import date, timedelta
 import pytest
 from django.contrib.auth.models import Group
 from django.urls import reverse
+from django_otp.plugins.otp_totp.models import TOTPDevice
 
 from django.core.cache import cache
 from paa.models import Action
@@ -55,6 +56,7 @@ def test_action_detail_permissions(client, django_user_model):
     sa_group = Group.objects.create(name="SA")
     sa_user = django_user_model.objects.create_user("sa")
     sa_user.groups.add(sa_group)
+    TOTPDevice.objects.create(user=sa_user, name="default", confirmed=True)
     action = Action.objects.create(title="a", created_by=sa_user)
 
     client.force_login(sa_user)

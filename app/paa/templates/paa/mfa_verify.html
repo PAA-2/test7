@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Vérification MFA</h1>
+<form method="post">{% csrf_token %}
+  <input type="text" name="token" placeholder="Code à 6 chiffres" required>
+  <button type="submit">Vérifier</button>
+</form>
+{% endblock %}
+

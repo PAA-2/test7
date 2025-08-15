@@ -89,3 +89,4 @@ from .models_adminpanel import SystemSettings  # noqa: E402,F401
 from .models_import import ImportProfile, SyncReport  # noqa: E402,F401
 from .models_attachments import Attachment  # noqa: E402,F401
 from .models_audit import AuditLog  # noqa: E402,F401
+from .models_retention import RetentionMark  # noqa: E402,F401

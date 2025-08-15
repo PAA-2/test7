@@ -25,21 +25,25 @@ INSTALLED_APPS += [
     "guardian",
     "django.contrib.postgres",
     "django_otp",
+    "django_otp.plugins.otp_totp",
+    "axes",
 ]
 
 MIDDLEWARE = [
+    "axes.middleware.AxesMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "django_otp.middleware.OTPMiddleware",
+    "paa.security.SecurityHeadersMiddleware",
+    "paa.security.AdminIPAllowlistMiddleware",
+    "paa.security.CurrentUserMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
+    "paa.auth_gate.enforce_mfa_middleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
-
-MIDDLEWARE.insert(0, "paa.security.SecurityHeadersMiddleware")
-MIDDLEWARE.insert(1, "paa.security.AdminIPAllowlistMiddleware")
-MIDDLEWARE.insert(2, "paa.security.CurrentUserMiddleware")
 
 TEMPLATES = [
     {
@@ -100,11 +104,26 @@ FERNET_KEY = env(
 )
 
 AUTHENTICATION_BACKENDS = (
+    "paa.sso_backend.PlaceholderSSOBackend",
     "django.contrib.auth.backends.ModelBackend",
     "guardian.backends.ObjectPermissionBackend",
 )
 
 ANONYMOUS_USER_NAME = "anonymous"
+
+AXES_FAILURE_LIMIT = int(env("AXES_FAILURE_LIMIT", default=5))
+AXES_COOLOFF_TIME = int(env("AXES_COOLOFF_TIME", default=30))
+AXES_LOCKOUT_PARAMETERS = ["username", "ip_address"]
+
+MFA_REQUIRED_ROLES = ["SA", "PP"]
+
+SSO_ENABLED = env.bool("SSO_ENABLED", default=False)
+
+DEFAULT_FROM_EMAIL = env("DEFAULT_FROM_EMAIL", default="no-reply@paa.local")
+EXPORT_DIR = env("EXPORT_DIR", default="/media/exports")
+
+RETENTION_DAYS = int(env("RETENTION_DAYS", default=365))
+PURGE_GRACE_DAYS = int(env("PURGE_GRACE_DAYS", default=30))
 
 CELERY_BROKER_URL = env("CELERY_BROKER_URL", default="redis://redis:6379/0")
 CELERY_RESULT_BACKEND = env("CELERY_RESULT_BACKEND", default="redis://redis:6379/1")
@@ -144,6 +163,14 @@ CELERY_BEAT_SCHEDULE.update(
         "warm-kpi-cache-5min": {
             "task": "paa.tasks_perf.warm_kpi_cache",
             "schedule": timedelta(minutes=5),
+        },
+        "purge-due-daily": {
+            "task": "paa.tasks_compliance.purge_due_task",
+            "schedule": timedelta(days=1),
+        },
+        "permissions-report-monthly": {
+            "task": "paa.tasks_compliance.monthly_permissions_report",
+            "schedule": 60 * 60 * 24 * 30,
         },
     }
 )

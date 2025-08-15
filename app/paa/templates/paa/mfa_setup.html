@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Activer la MFA (TOTP)</h1>
+<p>Scannez ce QR dans votre application d’authentification (Google Authenticator, Authy, etc.).</p>
+<img src="data:image/png;base64,{{ qr_b64 }}" alt="QR">
+<form method="post">{% csrf_token %}
+  <input type="text" name="token" placeholder="Code à 6 chiffres" required>
+  <button type="submit">Valider</button>
+</form>
+{% endblock %}
+
