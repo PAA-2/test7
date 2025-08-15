@@ -1,6 +1,7 @@
 import environ
 from pathlib import Path
 import os
+from datetime import timedelta
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 env = environ.Env()
@@ -83,3 +84,32 @@ AUTHENTICATION_BACKENDS = (
 )
 
 ANONYMOUS_USER_NAME = "anonymous"
+
+CELERY_BROKER_URL = env("CELERY_BROKER_URL", default="redis://redis:6379/0")
+CELERY_RESULT_BACKEND = env("CELERY_RESULT_BACKEND", default="redis://redis:6379/1")
+CELERY_TIMEZONE = TIME_ZONE
+CELERY_ENABLE_UTC = True
+
+CELERY_BEAT_SCHEDULE = {
+    "send-reminders-daily": {
+        "task": "paa.tasks.send_reminders",
+        "schedule": timedelta(days=1),
+        "options": {"queue": "default"},
+    },
+    "check-stale-en-traitement": {
+        "task": "paa.tasks.check_stale_en_traitement",
+        "schedule": timedelta(hours=6),
+    },
+    "send-weekly-digest": {
+        "task": "paa.tasks.send_weekly_digest",
+        "schedule": timedelta(days=1),
+    },
+    "run-scheduled-syncs": {
+        "task": "paa.tasks.run_scheduled_syncs",
+        "schedule": timedelta(days=1),
+    },
+    "recalc-consolidated": {
+        "task": "paa.tasks.recalc_consolidated",
+        "schedule": timedelta(days=1),
+    },
+}

@@ -22,3 +22,11 @@ class SyncReport(models.Model):
 
     def __str__(self):
         return f"Rapport {self.plan.code} — {self.ts}"
+
+
+class SyncSchedule(models.Model):
+    plan = models.ForeignKey("Plan", on_delete=models.CASCADE)
+    enabled = models.BooleanField(default=True)
+
+    def __str__(self):
+        return f"Sync {self.plan.code} (enabled={self.enabled})"

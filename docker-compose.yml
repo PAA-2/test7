@@ -12,6 +12,26 @@ services:
       - redis
     ports:
       - "8000:8000"
+  worker:
+    build: .
+    command: celery -A config worker -l INFO
+    volumes:
+      - ./app:/app
+      - ./media:/media
+    env_file: .env
+    depends_on:
+      - db
+      - redis
+  beat:
+    build: .
+    command: celery -A config beat -l INFO
+    volumes:
+      - ./app:/app
+      - ./media:/media
+    env_file: .env
+    depends_on:
+      - db
+      - redis
   db:
     image: postgres:15
     environment:
