@@ -72,6 +72,16 @@ DATABASES = {
     }
 }
 
+CACHES = {
+    "default": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": env("REDIS_CACHE_URL", default="redis://redis:6379/2"),
+        "OPTIONS": {"CLIENT_CLASS": "django_redis.client.DefaultClient"},
+        "KEY_PREFIX": "paa",
+        "TIMEOUT": 300,
+    }
+}
+
 LANGUAGE_CODE = "fr-fr"
 TIME_ZONE = "Africa/Algiers"
 USE_I18N = True
@@ -124,6 +134,19 @@ CELERY_BEAT_SCHEDULE = {
         "schedule": timedelta(days=1),
     },
 }
+
+CELERY_BEAT_SCHEDULE.update(
+    {
+        "refresh-mv-nightly": {
+            "task": "paa.tasks_perf.refresh_consolidated_mv",
+            "schedule": timedelta(days=1),
+        },
+        "warm-kpi-cache-5min": {
+            "task": "paa.tasks_perf.warm_kpi_cache",
+            "schedule": timedelta(minutes=5),
+        },
+    }
+)
 
 SECURE_HSTS_SECONDS = 31536000
 SECURE_HSTS_INCLUDE_SUBDOMAINS = True

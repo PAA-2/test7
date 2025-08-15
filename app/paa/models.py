@@ -65,6 +65,10 @@ class Action(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    objects = models.Manager.from_queryset(
+        __import__("paa.querysets").querysets.ActionQuerySet
+    )()
+
     def __str__(self):
         return f"{self.code} — {self.title}"
 

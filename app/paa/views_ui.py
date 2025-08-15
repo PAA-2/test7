@@ -6,26 +6,28 @@ import csv
 from .models import Action
 from .helpers import can_view
 from .services import request_check, accept_check, reject_incomplete, reject_inadequate
+from .kpis import get_kpis_cached
+from .cache_utils import cache_get, cache_set
 
 
 @login_required
 def dashboard(request):
     role = request.user.groups.first().name if request.user.groups.exists() else "U"
-    kpis = {
-        "total_actions": Action.objects.count(),
-        "en_cours": Action.objects.filter(status="EN_COURS").count(),
-        "retards": Action.objects.filter(j_delta__lt=0).count(),
-        "cloturees": Action.objects.filter(status="CLOTUREE").count(),
-    }
+    kpis = get_kpis_cached()
     return render(request, "paa/dashboard.html", {"role": role, "kpis": kpis})
 
 
 @login_required
 def actions_list(request):
-    actions = Action.objects.all()
     query = request.GET.get("q")
-    if query:
-        actions = actions.filter(title__icontains=query)
+    cache_key = f"actions_list:{query or 'all'}"
+    actions = cache_get(cache_key)
+    if actions is None:
+        actions = Action.objects.fast()
+        if query:
+            actions = actions.filter(title__icontains=query)
+        actions = list(actions)
+        cache_set(cache_key, actions)
     return render(request, "paa/actions_list.html", {"actions": actions})
 
 
@@ -53,11 +55,11 @@ def action_detail(request, pk):
 @login_required
 def kanban_view(request):
     columns = [
-        ("A_FAIRE", Action.objects.filter(status="A_FAIRE")),
-        ("EN_COURS", Action.objects.filter(status="EN_COURS")),
-        ("EN_TRAITEMENT", Action.objects.filter(status="EN_TRAITEMENT")),
-        ("CLOTUREE", Action.objects.filter(status="CLOTUREE")),
-        ("ARCHIVEE", Action.objects.filter(status="ARCHIVEE")),
+        ("A_FAIRE", Action.objects.fast().filter(status="A_FAIRE")),
+        ("EN_COURS", Action.objects.fast().filter(status="EN_COURS")),
+        ("EN_TRAITEMENT", Action.objects.fast().filter(status="EN_TRAITEMENT")),
+        ("CLOTUREE", Action.objects.fast().filter(status="CLOTUREE")),
+        ("ARCHIVEE", Action.objects.fast().filter(status="ARCHIVEE")),
     ]
     return render(request, "paa/kanban.html", {"columns": columns})
 
@@ -68,6 +70,6 @@ def export_actions_csv(request):
     response["Content-Disposition"] = 'attachment; filename="actions.csv"'
     writer = csv.writer(response)
     writer.writerow(["Code", "Titre", "Statut", "Priorité", "Échéance", "J"])
-    for a in Action.objects.all():
+    for a in Action.objects.fast().all():
         writer.writerow([a.code, a.title, a.status, a.priority, a.due_date, a.j_delta])
     return response
