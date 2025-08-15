@@ -1,7 +1,10 @@
 import uuid
 from datetime import date
-from django.db import transaction
+
 from django.core.exceptions import PermissionDenied, ValidationError
+from django.db import transaction
+
+from .helpers import can_transition
 from .models import Action
 
 
@@ -70,8 +73,3 @@ def reject_inadequate(action: Action, actor, comment: str):
     action.action_parent = new_action
     action.save()
     return action, new_action
-
-
-def can_transition(action: Action, actor) -> bool:
-    """Logique simplifiée, sera remplacée par guardian à l'étape 4."""
-    return True

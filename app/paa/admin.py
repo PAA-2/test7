@@ -1,16 +1,18 @@
 from django.contrib import admin
-from .models import Plan, Action, ActionPlan
+from guardian.admin import GuardedModelAdmin
+
+from .models import Action, ActionPlan, Plan
 
 
 @admin.register(Plan)
-class PlanAdmin(admin.ModelAdmin):
+class PlanAdmin(GuardedModelAdmin):
     list_display = ("code", "name", "mode", "owner", "is_active")
     search_fields = ("code", "name")
     list_filter = ("mode", "is_active")
 
 
 @admin.register(Action)
-class ActionAdmin(admin.ModelAdmin):
+class ActionAdmin(GuardedModelAdmin):
     list_display = ("code", "title", "status", "priority", "due_date", "j_delta")
     search_fields = ("code", "title", "description")
     list_filter = ("status", "priority")
