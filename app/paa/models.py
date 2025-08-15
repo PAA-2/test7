@@ -81,4 +81,5 @@ class ActionPlan(models.Model):
 
 
 # Import additional models to ensure they are registered with Django
+from .models_adminpanel import SystemSettings  # noqa: E402,F401
 from .models_import import ImportProfile, SyncReport  # noqa: E402,F401

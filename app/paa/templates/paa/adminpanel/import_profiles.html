@@ -1,0 +1,2 @@
+{% for p in profiles %}<p>{{ p.name }}</p>{% endfor %}
+<form method="post">{% csrf_token %}{{ form.as_p }}<button type="submit">Save</button></form>
