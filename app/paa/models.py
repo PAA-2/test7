@@ -78,3 +78,7 @@ class ActionPlan(models.Model):
 
     def __str__(self):
         return f"{self.action.code} ↔ {self.plan.code}"
+
+
+# Import additional models to ensure they are registered with Django
+from .models_import import ImportProfile, SyncReport  # noqa: E402,F401
