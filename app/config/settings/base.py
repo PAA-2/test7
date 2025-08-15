@@ -2,6 +2,9 @@ import environ
 from pathlib import Path
 import os
 from datetime import timedelta
+import logging
+import logging.config
+import structlog
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 env = environ.Env()
@@ -28,9 +31,14 @@ INSTALLED_APPS += [
     "django_otp",
     "django_otp.plugins.otp_totp",
     "axes",
+    "health_check",
+    "health_check.db",
+    "health_check.cache",
 ]
 
 MIDDLEWARE = [
+    "paa.ops.RequestIDMiddleware",
+    "paa.ops.AccessLogMiddleware",
     "axes.middleware.AxesMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
@@ -121,6 +129,7 @@ MFA_REQUIRED_ROLES = ["SA", "PP"]
 SSO_ENABLED = env.bool("SSO_ENABLED", default=False)
 
 DEFAULT_FROM_EMAIL = env("DEFAULT_FROM_EMAIL", default="no-reply@paa.local")
+ADMINS = [("Ops", env("OPS_EMAIL", default="ops@paa.local"))]
 EXPORT_DIR = env("EXPORT_DIR", default="/media/exports")
 
 RETENTION_DAYS = int(env("RETENTION_DAYS", default=365))
@@ -176,6 +185,15 @@ CELERY_BEAT_SCHEDULE.update(
     }
 )
 
+CELERY_BEAT_SCHEDULE.update(
+    {
+        "celery-heartbeat-60s": {
+            "task": "paa.tasks_ops.celery_heartbeat",
+            "schedule": timedelta(seconds=60),
+        }
+    }
+)
+
 SECURE_HSTS_SECONDS = 31536000
 SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 SECURE_HSTS_PRELOAD = True
@@ -199,3 +217,54 @@ CSP_STYLE_SRC = ("'self'", "'unsafe-inline'")
 CSP_IMG_SRC = ("'self'", "data:")
 CSP_CONNECT_SRC = ("'self'",)
 CSP_FRAME_ANCESTORS = ("'none'",)
+
+REQUEST_ID_HEADER = "HTTP_X_REQUEST_ID"
+
+LOG_LEVEL = env("LOG_LEVEL", default="INFO")
+
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {
+        "json": {
+            "()": "structlog.stdlib.ProcessorFormatter",
+            "processor": structlog.processors.JSONRenderer(),
+        }
+    },
+    "handlers": {
+        "console": {
+            "level": LOG_LEVEL,
+            "class": "logging.StreamHandler",
+            "formatter": "json",
+        },
+        "mail_admins": {
+            "level": "ERROR",
+            "class": "django.utils.log.AdminEmailHandler",
+        },
+    },
+    "root": {"handlers": ["console"], "level": LOG_LEVEL},
+    "loggers": {
+        "django.request": {
+            "handlers": ["console", "mail_admins"],
+            "level": LOG_LEVEL,
+            "propagate": False,
+        },
+        "celery": {"handlers": ["console"], "level": LOG_LEVEL, "propagate": False},
+        "paa": {"handlers": ["console"], "level": LOG_LEVEL, "propagate": False},
+    },
+}
+
+structlog.configure(
+    processors=[
+        structlog.contextvars.merge_contextvars,
+        structlog.stdlib.add_log_level,
+        structlog.stdlib.add_logger_name,
+        structlog.processors.TimeStamper(fmt="iso"),
+        structlog.processors.UnicodeDecoder(),
+    ],
+    logger_factory=structlog.stdlib.LoggerFactory(),
+    wrapper_class=structlog.make_filtering_bound_logger(
+        logging.getLevelName(LOG_LEVEL)
+    ),
+    cache_logger_on_first_use=True,
+)

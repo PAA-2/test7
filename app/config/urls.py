@@ -1,7 +1,7 @@
 from django.urls import path, include
 from django.http import JsonResponse, HttpResponse
 from django.contrib import admin
-from paa import views_mfa, views_compliance
+from paa import views_mfa, views_compliance, views_ops
 
 
 def health(request):
@@ -15,6 +15,10 @@ urlpatterns = [
     path("", include("paa.urls_ui")),
     path("assistant/", include("assistantlite.urls")),
     path("admin/", admin.site.urls),
+    path("healthz", views_ops.healthz, name="healthz"),
+    path("readyz", views_ops.readyz, name="readyz"),
+    path("celery/health", views_ops.celery_health, name="celery_health"),
+    path("metrics", views_ops.metrics, name="metrics"),
 ]
 
 try:  # pragma: no cover - optional MFA routes
@@ -46,3 +50,5 @@ urlpatterns += [
         ),
     ),
 ]
+
+urlpatterns += [path("ht/", include("health_check.urls"))]
