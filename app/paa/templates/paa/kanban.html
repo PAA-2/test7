@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Kanban</h1>
+<div style="display:flex;">
+{% for col, actions in columns %}
+<div style="margin:10px;">
+<h3>{{ col }}</h3>
+<ul>
+{% for action in actions %}
+<li>{{ action.code }} - {{ action.title }}</li>
+{% endfor %}
+</ul>
+</div>
+{% endfor %}
+</div>
+{% endblock %}

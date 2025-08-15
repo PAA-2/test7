@@ -9,4 +9,5 @@ def health(request):
 urlpatterns = [
     path("", health),
     path("adminpanel/", include("paa.urls_adminpanel")),
+    path("", include("paa.urls_ui")),
 ]

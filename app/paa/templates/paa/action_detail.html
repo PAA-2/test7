@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>{{ action.code }} — {{ action.title }}</h1>
+<p>{{ action.description }}</p>
+<p>Statut : {{ action.status }}</p>
+<form method="post">{% csrf_token %}
+  {% if action.status != "CLOTUREE" %}
+  <button name="request_check">Demander Check</button>
+  {% endif %}
+</form>
+{% endblock %}
