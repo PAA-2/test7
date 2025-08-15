@@ -23,6 +23,7 @@ INSTALLED_APPS = [
 
 INSTALLED_APPS += [
     "guardian",
+    "django.contrib.postgres",
 ]
 
 MIDDLEWARE = [

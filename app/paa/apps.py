@@ -7,4 +7,5 @@ class PaaConfig(AppConfig):
     verbose_name = "Plans d'Actions"
 
     def ready(self):  # pragma: no cover - import signals for side effects
+        from . import models_attachments  # noqa: F401
         import paa.signals  # noqa: F401

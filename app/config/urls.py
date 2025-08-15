@@ -8,6 +8,7 @@ def health(request):
 
 urlpatterns = [
     path("", health),
+    path("", include("paa.urls_search")),
     path("adminpanel/", include("paa.urls_adminpanel")),
     path("", include("paa.urls_ui")),
 ]
